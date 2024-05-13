@@ -1,0 +1,16 @@
+venv/
+.idea/
+.vscode/
+/.env.example
+
+__pycache__/
+/db.sqlite3
+local.py
+production.py
+
+*.log
+*.pot
+*.py[cod]
+
+back_media/**
+!back_media/
