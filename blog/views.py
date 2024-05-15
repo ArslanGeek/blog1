@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import generics
-from .serialaizer import *
+from .serializer import *
 from .models import *
 
 
