@@ -2,9 +2,6 @@
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-
-from message.models import Message
-# from .models import User
 from .serializer import *
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
@@ -17,9 +14,14 @@ class UserCreateAPIView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        user = CustomUser.objects.create_user(username=request.data.get('username'),
+                                              password=request.data.get('password'))
 
         return Response(serializer.data, status.HTTP_201_CREATED)
+
+class UserListAPIView(generics.ListAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserCreateSerializer
 
 class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomUser.objects.all()
@@ -35,14 +37,16 @@ class UserLoginAPIView(generics.CreateAPIView):
         username = request.data.get('username')
         password = request.data.get('password')
         user = authenticate(request, username=username, password=password)
+        # print(request.user)
 
         if user is not None:
+            print(request.user)
             refresh = RefreshToken.for_user(user)
             access_token = refresh.access_token
             return Response({
                 'detail': 'You have successfully logged in.',
                 'id': user.id,
-                'username': user.username,
+                'first_name': user.first_name,
                 'refreshToken': str(refresh),
                 'accessToken': str(access_token),
                 'refreshToken_lifetime_days': refresh.lifetime.days,
