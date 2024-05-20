@@ -29,7 +29,7 @@ class UserDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'id'
 
 
-class UserLoginAPIView(generics.CreateAPIView):
+class UserLoginAPIView(generics.ListCreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserLoginSerializer
 
@@ -60,8 +60,8 @@ class UserLogoutAPIView(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            refresh_token = request.data.get('refreshToken')
-            token = RefreshToken(refresh_token)
+            access_token = request.data.get('accessToken')
+            token = RefreshToken(access_token)
             token.blacklist()
 
             return Response({'detail': 'You have successfully logged out'},

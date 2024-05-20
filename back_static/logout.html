@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Logout</title>
+</head>
+<body>
+    <h1>Logout</h1>
+    <form id="logout-form">
+        <input type="hidden" id="refreshToken" name="refreshToken" value="{{ refreshToken }}">
+        <button type="submit">Logout</button>
+    </form>
+
+    <script>
+        document.getElementById('logout-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const refreshToken = document.getElementById('refreshToken').value;
+
+            fetch('/api/v1/user/logout/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ refreshToken: refreshToken })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.detail);
+                // Редирект или выполнение других действий после успешного выхода
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при попытке выхода');
+            });
+        });
+    </script>
+</body>
+</html>

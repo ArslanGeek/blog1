@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Posts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            position: relative; /* Чтобы кнопка была в правом верхнем углу относительно body */
+        }
+        .post { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        .buttons { margin-top: 10px; }
+        #logout-button { display: none; } /* Скрытая кнопка logout по умолчанию */
+        #login-button {
+            display: none; /* Скрытая кнопка login по умолчанию */
+            position: absolute; /* Позиционирование абсолютно, чтобы была в правом верхнем углу */
+            top: 10px; /* Отступ сверху */
+            right: 10px; /* Отступ справа */
+        }
+    </style>
+</head>
+<body>
+    <h1>Posts</h1>
+    <div id="posts"></div>
+    <button id="logout-button" onclick="logout()">Logout</button> <!-- Кнопка "Logout" -->
+    <button id="login-button" onclick="redirectToLogin()">Login</button> <!-- Кнопка "Login" -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchPosts();
+            checkAuthStatus(); // Проверка статуса аутентификации при загрузке страницы
+        });
+
+        function logout() {
+            // Удалить токен из localStorage при нажатии на кнопку "Logout"
+            localStorage.removeItem('accessToken');
+            alert('Logged out successfully');
+            // Перенаправить пользователя на страницу логина
+            window.location.href = 'login.html';
+        }
+
+        function redirectToLogin() {
+            // Перенаправить пользователя на страницу логина
+            window.location.href = 'login.html';
+        }
+
+        function fetchPosts() {
+            fetch('/api/v1/posts/list/', {
+                headers: {
+                    'Authorization': 'Bearer ' + getToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                let postsDiv = document.getElementById('posts');
+                postsDiv.innerHTML = '';
+                data.forEach(post => {
+                    let postDiv = document.createElement('div');
+                    postDiv.className = 'post';
+                    postDiv.innerHTML = `
+                        <h2>${post.title}</h2>
+                        <p>${post.content}</p>
+                        <p>Likes: ${post.likes_count} Dislikes: ${post.dislikes_count}</p>
+                        <div class="buttons">
+                            <button class="like-button" onclick="likePost(${post.id})">Like</button>
+                            <button class="dislike-button" onclick="dislikePost(${post.id})">Dislike</button>
+                        </div>
+                    `;
+                    postsDiv.appendChild(postDiv);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.location.href = '/login.html'; // Redirect to login page if authentication fails
+            });
+        }
+
+        function likePost(postId) {
+            const token = getToken();
+            if (!token || token === "undefined") {
+                // Если токен доступа отсутствует или его значение "undefined",
+                // перенаправляем пользователя на страницу входа
+                window.location.href = 'login.html';
+                return;
+            }
+
+            fetch(`/api/v1/posts/${postId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'), // Включаем CSRF токен в заголовок запроса
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                fetchPosts();
+            });
+        }
+
+        function dislikePost(postId) {
+            const token = getToken();
+            if (!token || token === "undefined") {
+                // Если токен доступа отсутствует или его значение "undefined",
+                // перенаправляем пользователя на страницу входа
+                window.location.href = 'login.html';
+                return;
+            }
+
+            fetch(`/api/v1/posts/${postId}/dislike/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'), // Включаем CSRF токен в заголовок запроса
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                fetchPosts();
+            });
+        }
+
+        function getToken() {
+            return localStorage.getItem('accessToken');
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function checkAuthStatus() {
+            const token = getToken();
+            if (token && token !== "undefined") {
+                // Если токен доступа присутствует, показываем кнопку logout
+                document.getElementById('logout-button').style.display = 'block';
+            } else {
+                // Если токен доступа отсутствует или его значение "undefined",
+                // скрываем кнопки лайка и дизлайка, и показываем кнопку login
+                const likeButtons = document.querySelectorAll('.like-button');
+                const dislikeButtons = document.querySelectorAll('.dislike-button');
+                const loginButton = document.getElementById('login-button');
+                likeButtons.forEach(button => button.style.display = 'none');
+                dislikeButtons.forEach(button => button.style.display = 'none');
+                loginButton.style.display = 'block';
+            }
+        }
+
+    </script>
+</body>
+</html>

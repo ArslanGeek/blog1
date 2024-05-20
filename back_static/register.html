@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+</head>
+<body>
+    <h1>Register</h1>
+    <form id="register-form">
+        <input type="text" id="username" placeholder="Username" required><br><br>
+        <input type="password" id="password" placeholder="Password" required><br><br>
+        <button type="submit">Register</button>
+        <button type="button" onclick="redirectToLogin()">Login</button> <!-- Кнопка "Login" для перехода на страницу входа -->
+    </form>
+    <script>
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch('/api/v1/user/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'User registered successfully') {
+                    alert('Registration successful');
+                    window.location.href = 'login.html';
+                } else {
+                    if (data.message === 'User already exists') {
+                        alert('User already exists. Please login.');
+                        redirectToLogin(); // Перенаправляем на страницу авторизации
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            });
+        });
+
+        function redirectToLogin() {
+            window.location.href = 'login.html'; // Перенаправляем на страницу авторизации
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+    <form id="login-form">
+        <input type="text" id="username" placeholder="Username" required><br><br>
+        <input type="password" id="password" placeholder="Password" required><br><br>
+        <button type="submit">Login</button>
+        <button type="button" onclick="redirectToRegister()">Register</button> <!-- Кнопка "Register" для перехода на страницу регистрации -->
+    </form>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch('/api/v1/user/login/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.accessToken) {
+                    alert('Login successful');
+                    // Save the JWT token to localStorage
+                    localStorage.setItem('accessToken', data.accessToken);
+                    window.location.href = 'index.html'; // Redirect to another page
+                } else {
+                    alert('Login failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error occurred while trying to login');
+            });
+        });
+
+        function redirectToRegister() {
+            window.location.href = 'register.html'; // Перенаправляем на страницу регистрации
+        }
+    </script>
+</body>
+</html>

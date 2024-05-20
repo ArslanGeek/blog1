@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Post</title>
+</head>
+<body>
+    <h1>Create a New Post</h1>
+    <form id="post-form">
+        <input type="text" id="title" placeholder="Title" required><br><br>
+        <textarea id="content" placeholder="Content" required></textarea><br><br>
+        <div id="message" style="color: red;"></div> <!-- Элемент для отображения информации пользователю -->
+        <button type="submit">Create Post</button>
+        <button type="button" onclick="cancelCreation()">Cancel</button> <!-- Кнопка для отмены создания поста -->
+    </form>
+    <script>
+        document.getElementById('post-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const message = document.getElementById('message'); // Элемент для отображения информации пользователю
+
+            fetch('/api/v1/posts/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Authorization': 'JWT ' + getToken(),
+                },
+                body: JSON.stringify({ title: title, content: content })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.id) {
+                    alert('Post created successfully');
+                    window.location.href = 'index.html';
+                } else {
+                    message.textContent = 'Failed to create post'; // Выводим сообщение об ошибке пользователю
+                }
+            });
+        });
+
+        function cancelCreation() {
+            // Перенаправляем пользователя на главную страницу при отмене создания поста
+            window.location.href = 'index.html';
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>
